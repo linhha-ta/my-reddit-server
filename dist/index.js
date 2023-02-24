@@ -15,6 +15,7 @@ const constants_1 = require("./constants");
 const express_session_1 = __importDefault(require("express-session"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const redis_1 = require("redis");
+const cors_1 = __importDefault(require("cors"));
 const prisma = new client_1.PrismaClient();
 let plugins = [];
 if (constants_1.__prod__) {
@@ -39,6 +40,7 @@ const main = async () => {
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
     const redisClient = (0, redis_1.createClient)({ legacyMode: true });
     redisClient.connect().catch(console.error);
+    app.use((0, cors_1.default)({ origin: 'http://localhost:3000', credentials: true }));
     app.use((0, express_session_1.default)({
         name: 'qid',
         cookie: {
@@ -61,7 +63,7 @@ const main = async () => {
         context: ({ req, res }) => ({ prisma, req, res }),
     });
     await apolloServer.start();
-    apolloServer.applyMiddleware({ app });
+    apolloServer.applyMiddleware({ app, cors: false });
     app.listen(4000, () => {
         console.log('Server is running on http://localhost:4000');
     });

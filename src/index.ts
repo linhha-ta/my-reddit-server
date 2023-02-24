@@ -17,6 +17,8 @@ import session from 'express-session';
 import connectRedis from 'connect-redis';
 import { createClient } from 'redis';
 
+import cors from 'cors';
+
 const prisma = new PrismaClient();
 
 let plugins: any = [];
@@ -44,6 +46,8 @@ const main = async () => {
 	const redisClient = createClient({ legacyMode: true });
 	redisClient.connect().catch(console.error);
 
+	app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
+
 	app.use(
 		session({
 			name: 'qid',
@@ -70,7 +74,7 @@ const main = async () => {
 	});
 
 	await apolloServer.start();
-	apolloServer.applyMiddleware({ app });
+	apolloServer.applyMiddleware({ app, cors: false });
 
 	app.listen(4000, () => {
 		console.log('Server is running on http://localhost:4000');
