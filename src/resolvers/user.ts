@@ -1,5 +1,5 @@
 import { MyContext } from 'src/types';
-import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Resolver } from 'type-graphql';
+import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
 import argon2 from 'argon2';
 
 @ObjectType()
@@ -46,10 +46,27 @@ class FieldError {
 
 @Resolver()
 export class UserResolver {
+	// create a me query
+	@Query(() => UserType, { nullable: true })
+	async me(@Ctx() { prisma, req }: MyContext) {
+		// you are not logged in
+		if (!req.session.userId) {
+			return null;
+		}
+
+		const user = await prisma.user.findUnique({
+			where: {
+				id: req.session.userId,
+			},
+		});
+
+		return user;
+	}
+
 	@Mutation(() => UserResponse)
 	async register(
 		@Arg('options') options: UsernamePasswordInput,
-		@Ctx() { prisma }: MyContext
+		@Ctx() { prisma, req }: MyContext
 	): Promise<UserResponse> {
 		if (options.username.length <= 2) {
 			return {
@@ -96,13 +113,18 @@ export class UserResolver {
 			}
 		}
 
+		req.session.userId = user?.id;
+
 		return {
 			user,
 		};
 	}
 
 	@Mutation(() => UserResponse)
-	async login(@Arg('options') options: UsernamePasswordInput, @Ctx() { prisma }: MyContext): Promise<UserResponse> {
+	async login(
+		@Arg('options') options: UsernamePasswordInput,
+		@Ctx() { prisma, req }: MyContext
+	): Promise<UserResponse> {
 		const user = await prisma.user.findUnique({
 			where: {
 				username: options.username,
@@ -130,6 +152,8 @@ export class UserResolver {
 				],
 			};
 		}
+
+		req.session.userId = user.id;
 
 		return {
 			user,
