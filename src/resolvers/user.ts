@@ -1,10 +1,12 @@
 import { MyContext } from 'src/types';
 import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
 import argon2 from 'argon2';
-import { COOKIE_NAME } from '../constants';
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants';
 import { User } from '@prisma/client';
 import { UsernamePasswordInput } from './UsernamePasswordInput';
 import { validateRegister } from '../util/validateRegister';
+import { sendEmail } from '../util/sendEmail';
+import { v4 as uuidv4 } from 'uuid';
 
 @ObjectType()
 export class UserType {
@@ -167,5 +169,92 @@ export class UserResolver {
 				resolve(true);
 			})
 		);
+	}
+
+	@Mutation(() => Boolean)
+	async forgotPassword(@Arg('email') email: string, @Ctx() { prisma, redisClient }: MyContext) {
+		const user = await prisma.user.findUnique({
+			where: {
+				email,
+			},
+		});
+
+		if (!user) {
+			return true;
+		}
+
+		const token = uuidv4();
+		await redisClient.set(FORGET_PASSWORD_PREFIX + token, user.id, 'EX', 1000 * 60 * 60 * 24 * 3);
+
+		const html = `<a href="http://localhost:3000/change-password/${token}">Reset Password</a>`;
+		await sendEmail(user.email, html);
+
+		return true;
+	}
+
+	@Mutation(() => UserResponse)
+	async changePassword(
+		@Arg('token') token: string,
+		@Arg('newPassword') newPassword: string,
+		@Ctx() { prisma, redisClient, req }: MyContext
+	): Promise<UserResponse> {
+		if (newPassword.length <= 2) {
+			return {
+				errors: [
+					{
+						field: 'newPassword',
+						message: 'Password must be greater than 2',
+					},
+				],
+			};
+		}
+
+		const key = FORGET_PASSWORD_PREFIX + token;
+		const userId = await redisClient.get(key);
+		if (!userId) {
+			return {
+				errors: [
+					{
+						field: 'token',
+						message: 'Token expired',
+					},
+				],
+			};
+		}
+
+		const user = await prisma.user.findUnique({
+			where: {
+				id: parseInt(userId),
+			},
+		});
+
+		if (!user) {
+			return {
+				errors: [
+					{
+						field: 'token',
+						message: 'User no longer exists',
+					},
+				],
+			};
+		}
+
+		await prisma.user.update({
+			where: {
+				id: parseInt(userId),
+			},
+			data: {
+				password: await argon2.hash(newPassword),
+			},
+		});
+
+		await redisClient.del(key);
+
+		// log in user after change password
+		req.session.userId = user.id;
+
+		return {
+			user,
+		};
 	}
 }

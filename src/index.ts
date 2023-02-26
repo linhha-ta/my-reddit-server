@@ -15,7 +15,7 @@ import { MyContext } from './types';
 
 import session from 'express-session';
 import connectRedis from 'connect-redis';
-import { createClient } from 'redis';
+import Redis from 'ioredis';
 
 import cors from 'cors';
 
@@ -43,8 +43,8 @@ const main = async () => {
 	const app = express();
 
 	const RedisStore = connectRedis(session);
-	const redisClient = createClient({ legacyMode: true });
-	redisClient.connect().catch(console.error);
+	const redisClient = new Redis();
+	// redisClient.connect().catch(console.error);
 
 	app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
 
@@ -70,7 +70,7 @@ const main = async () => {
 			validate: false,
 		}),
 		plugins,
-		context: ({ req, res }): MyContext => ({ prisma, req, res }),
+		context: ({ req, res }): MyContext => ({ prisma, req, res, redisClient }),
 	});
 
 	await apolloServer.start();

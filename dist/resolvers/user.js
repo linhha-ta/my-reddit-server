@@ -21,6 +21,8 @@ const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
 const UsernamePasswordInput_1 = require("./UsernamePasswordInput");
 const validateRegister_1 = require("../util/validateRegister");
+const sendEmail_1 = require("../util/sendEmail");
+const uuid_1 = require("uuid");
 let UserType = class UserType {
 };
 __decorate([
@@ -170,6 +172,73 @@ let UserResolver = class UserResolver {
             resolve(true);
         }));
     }
+    async forgotPassword(email, { prisma, redisClient }) {
+        const user = await prisma.user.findUnique({
+            where: {
+                email,
+            },
+        });
+        if (!user) {
+            return true;
+        }
+        const token = (0, uuid_1.v4)();
+        await redisClient.set(constants_1.FORGET_PASSWORD_PREFIX + token, user.id, 'EX', 1000 * 60 * 60 * 24 * 3);
+        const html = `<a href="http://localhost:3000/change-password/${token}">Reset Password</a>`;
+        await (0, sendEmail_1.sendEmail)(user.email, html);
+        return true;
+    }
+    async changePassword(token, newPassword, { prisma, redisClient, req }) {
+        if (newPassword.length <= 2) {
+            return {
+                errors: [
+                    {
+                        field: 'newPassword',
+                        message: 'Password must be greater than 2',
+                    },
+                ],
+            };
+        }
+        const key = constants_1.FORGET_PASSWORD_PREFIX + token;
+        const userId = await redisClient.get(key);
+        if (!userId) {
+            return {
+                errors: [
+                    {
+                        field: 'token',
+                        message: 'Token expired',
+                    },
+                ],
+            };
+        }
+        const user = await prisma.user.findUnique({
+            where: {
+                id: parseInt(userId),
+            },
+        });
+        if (!user) {
+            return {
+                errors: [
+                    {
+                        field: 'token',
+                        message: 'User no longer exists',
+                    },
+                ],
+            };
+        }
+        await prisma.user.update({
+            where: {
+                id: parseInt(userId),
+            },
+            data: {
+                password: await argon2_1.default.hash(newPassword),
+            },
+        });
+        await redisClient.del(key);
+        req.session.userId = user.id;
+        return {
+            user,
+        };
+    }
 };
 __decorate([
     (0, type_graphql_1.Query)(() => UserType, { nullable: true }),
@@ -202,6 +271,23 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "logout", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => Boolean),
+    __param(0, (0, type_graphql_1.Arg)('email')),
+    __param(1, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "forgotPassword", null);
+__decorate([
+    (0, type_graphql_1.Mutation)(() => UserResponse),
+    __param(0, (0, type_graphql_1.Arg)('token')),
+    __param(1, (0, type_graphql_1.Arg)('newPassword')),
+    __param(2, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "changePassword", null);
 UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);

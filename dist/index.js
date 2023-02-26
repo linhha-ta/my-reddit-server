@@ -14,7 +14,7 @@ const user_1 = require("./resolvers/user");
 const constants_1 = require("./constants");
 const express_session_1 = __importDefault(require("express-session"));
 const connect_redis_1 = __importDefault(require("connect-redis"));
-const redis_1 = require("redis");
+const ioredis_1 = __importDefault(require("ioredis"));
 const cors_1 = __importDefault(require("cors"));
 const prisma = new client_1.PrismaClient();
 let plugins = [];
@@ -38,8 +38,7 @@ else {
 const main = async () => {
     const app = (0, express_1.default)();
     const RedisStore = (0, connect_redis_1.default)(express_session_1.default);
-    const redisClient = (0, redis_1.createClient)({ legacyMode: true });
-    redisClient.connect().catch(console.error);
+    const redisClient = new ioredis_1.default();
     app.use((0, cors_1.default)({ origin: 'http://localhost:3000', credentials: true }));
     app.use((0, express_session_1.default)({
         name: constants_1.COOKIE_NAME,
@@ -60,7 +59,7 @@ const main = async () => {
             validate: false,
         }),
         plugins,
-        context: ({ req, res }) => ({ prisma, req, res }),
+        context: ({ req, res }) => ({ prisma, req, res, redisClient }),
     });
     await apolloServer.start();
     apolloServer.applyMiddleware({ app, cors: false });
