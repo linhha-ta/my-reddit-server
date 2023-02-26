@@ -1,7 +1,10 @@
 import { MyContext } from 'src/types';
-import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
 import argon2 from 'argon2';
 import { COOKIE_NAME } from '../constants';
+import { User } from '@prisma/client';
+import { UsernamePasswordInput } from './UsernamePasswordInput';
+import { validateRegister } from '../util/validateRegister';
 
 @ObjectType()
 export class UserType {
@@ -16,15 +19,9 @@ export class UserType {
 
 	@Field()
 	username: string;
-}
-
-@InputType()
-class UsernamePasswordInput {
-	@Field()
-	username: string;
 
 	@Field()
-	password: string;
+	email: string;
 }
 
 @ObjectType()
@@ -69,26 +66,9 @@ export class UserResolver {
 		@Arg('options') options: UsernamePasswordInput,
 		@Ctx() { prisma, req }: MyContext
 	): Promise<UserResponse> {
-		if (options.username.length <= 2) {
-			return {
-				errors: [
-					{
-						field: 'username',
-						message: 'Username must be at least 3 characters long',
-					},
-				],
-			};
-		}
-
-		if (options.password.length <= 2) {
-			return {
-				errors: [
-					{
-						field: 'password',
-						message: 'Password must be at least 2 characters long',
-					},
-				],
-			};
+		const errors = validateRegister(options);
+		if (errors) {
+			return { errors };
 		}
 
 		const hashedPassword = await argon2.hash(options.password);
@@ -98,6 +78,7 @@ export class UserResolver {
 				data: {
 					username: options.username,
 					password: hashedPassword,
+					email: options.email,
 				},
 			});
 		} catch (error) {
@@ -123,27 +104,38 @@ export class UserResolver {
 
 	@Mutation(() => UserResponse)
 	async login(
-		@Arg('options') options: UsernamePasswordInput,
+		@Arg('usernameOrEmail') usernameOrEmail: string,
+		@Arg('password') password: string,
 		@Ctx() { prisma, req }: MyContext
 	): Promise<UserResponse> {
-		const user = await prisma.user.findUnique({
-			where: {
-				username: options.username,
-			},
-		});
+		let user: User | null;
+
+		if (usernameOrEmail.includes('@')) {
+			user = await prisma.user.findUnique({
+				where: {
+					email: usernameOrEmail,
+				},
+			});
+		} else {
+			user = await prisma.user.findUnique({
+				where: {
+					username: usernameOrEmail,
+				},
+			});
+		}
 
 		if (!user) {
 			return {
 				errors: [
 					{
-						field: 'username',
-						message: 'That username does not exist',
+						field: 'usernameOrEmail',
+						message: 'That user does not exist',
 					},
 				],
 			};
 		}
 
-		if (!(await argon2.verify(user.password, options.password))) {
+		if (!(await argon2.verify(user.password, password))) {
 			return {
 				errors: [
 					{
