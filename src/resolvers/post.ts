@@ -1,6 +1,6 @@
 import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { MyContext } from '../types';
-import { PostType } from '../schemas/PostType';
+import { Post as PostType } from '../generated/typegraphql-prisma/models/Post';
 
 // a resolver is a class that contains methods that will be used
 // to resolve the queries and mutations that we will define in the schema
@@ -25,6 +25,8 @@ export class PostResolver {
 		return await prisma.post.create({
 			data: {
 				title,
+				text: 'This is a test post',
+				authorId: 1,
 			},
 		});
 	}

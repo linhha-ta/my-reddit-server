@@ -22,9 +22,9 @@ const constants_1 = require("../constants");
 const validateRegister_1 = require("../util/validateRegister");
 const sendEmail_1 = require("../util/sendEmail");
 const uuid_1 = require("uuid");
-const UserType_1 = require("../schemas/UserType");
 const UserResponse_1 = require("../schemas/UserResponse");
 const UsernamePasswordInput_1 = require("../schemas/UsernamePasswordInput");
+const models_1 = require("../generated/typegraphql-prisma/models");
 let UserResolver = class UserResolver {
     async me({ prisma, req }) {
         if (!req.session.userId) {
@@ -191,7 +191,7 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => UserType_1.UserType, { nullable: true }),
+    (0, type_graphql_1.Query)(() => models_1.User, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
