@@ -15,66 +15,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserResolver = exports.UserType = void 0;
+exports.UserResolver = void 0;
 const type_graphql_1 = require("type-graphql");
 const argon2_1 = __importDefault(require("argon2"));
 const constants_1 = require("../constants");
-const UsernamePasswordInput_1 = require("./UsernamePasswordInput");
 const validateRegister_1 = require("../util/validateRegister");
 const sendEmail_1 = require("../util/sendEmail");
 const uuid_1 = require("uuid");
-let UserType = class UserType {
-};
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Number)
-], UserType.prototype, "id", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Date)
-], UserType.prototype, "createdAt", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Date)
-], UserType.prototype, "updatedAt", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], UserType.prototype, "username", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], UserType.prototype, "email", void 0);
-UserType = __decorate([
-    (0, type_graphql_1.ObjectType)()
-], UserType);
-exports.UserType = UserType;
-let UserResponse = class UserResponse {
-};
-__decorate([
-    (0, type_graphql_1.Field)(() => [FieldError], { nullable: true }),
-    __metadata("design:type", Array)
-], UserResponse.prototype, "errors", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(() => UserType, { nullable: true }),
-    __metadata("design:type", UserType)
-], UserResponse.prototype, "user", void 0);
-UserResponse = __decorate([
-    (0, type_graphql_1.ObjectType)()
-], UserResponse);
-let FieldError = class FieldError {
-};
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], FieldError.prototype, "field", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], FieldError.prototype, "message", void 0);
-FieldError = __decorate([
-    (0, type_graphql_1.ObjectType)()
-], FieldError);
+const UserType_1 = require("../schemas/UserType");
+const UserResponse_1 = require("../schemas/UserResponse");
+const UsernamePasswordInput_1 = require("../schemas/UsernamePasswordInput");
 let UserResolver = class UserResolver {
     async me({ prisma, req }) {
         if (!req.session.userId) {
@@ -241,14 +191,14 @@ let UserResolver = class UserResolver {
     }
 };
 __decorate([
-    (0, type_graphql_1.Query)(() => UserType, { nullable: true }),
+    (0, type_graphql_1.Query)(() => UserType_1.UserType, { nullable: true }),
     __param(0, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "me", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => UserResponse),
+    (0, type_graphql_1.Mutation)(() => UserResponse_1.UserResponse),
     __param(0, (0, type_graphql_1.Arg)('options')),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
@@ -256,7 +206,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "register", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => UserResponse),
+    (0, type_graphql_1.Mutation)(() => UserResponse_1.UserResponse),
     __param(0, (0, type_graphql_1.Arg)('usernameOrEmail')),
     __param(1, (0, type_graphql_1.Arg)('password')),
     __param(2, (0, type_graphql_1.Ctx)()),
@@ -280,7 +230,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], UserResolver.prototype, "forgotPassword", null);
 __decorate([
-    (0, type_graphql_1.Mutation)(() => UserResponse),
+    (0, type_graphql_1.Mutation)(() => UserResponse_1.UserResponse),
     __param(0, (0, type_graphql_1.Arg)('token')),
     __param(1, (0, type_graphql_1.Arg)('newPassword')),
     __param(2, (0, type_graphql_1.Ctx)()),

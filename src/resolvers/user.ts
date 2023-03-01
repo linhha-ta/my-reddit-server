@@ -1,48 +1,14 @@
 import { MyContext } from 'src/types';
-import { Arg, Ctx, Field, Mutation, ObjectType, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
 import argon2 from 'argon2';
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants';
 import { User } from '@prisma/client';
-import { UsernamePasswordInput } from './UsernamePasswordInput';
 import { validateRegister } from '../util/validateRegister';
 import { sendEmail } from '../util/sendEmail';
 import { v4 as uuidv4 } from 'uuid';
-
-@ObjectType()
-export class UserType {
-	@Field()
-	id: number;
-
-	@Field()
-	createdAt: Date;
-
-	@Field()
-	updatedAt: Date;
-
-	@Field()
-	username: string;
-
-	@Field()
-	email: string;
-}
-
-@ObjectType()
-class UserResponse {
-	@Field(() => [FieldError], { nullable: true })
-	errors?: FieldError[];
-
-	@Field(() => UserType, { nullable: true })
-	user?: UserType;
-}
-
-@ObjectType()
-class FieldError {
-	@Field()
-	field: string;
-
-	@Field()
-	message: string;
-}
+import { UserType } from '../schemas/UserType';
+import { UserResponse } from '../schemas/UserResponse';
+import { UsernamePasswordInput } from '../schemas/UsernamePasswordInput';
 
 @Resolver()
 export class UserResolver {

@@ -1,4 +1,4 @@
-import { UsernamePasswordInput } from '../resolvers/UsernamePasswordInput';
+import { UsernamePasswordInput } from '../schemas/UsernamePasswordInput';
 
 export const validateRegister = (options: UsernamePasswordInput) => {
 	if (options.username.length <= 2) {
