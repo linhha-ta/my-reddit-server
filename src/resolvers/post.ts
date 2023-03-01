@@ -21,12 +21,18 @@ export class PostResolver {
 	}
 
 	@Mutation(() => PostType)
-	async createPost(@Arg('title') title: string, @Ctx() { prisma }: MyContext): Promise<PostType> {
+	async createPost(
+		@Arg('title') title: string,
+		@Arg('text') text: string,
+		@Ctx() { prisma, req }: MyContext
+	): Promise<PostType> {
+		if (!req.session.userId) throw new Error('Not authenticated');
+
 		return await prisma.post.create({
 			data: {
 				title,
-				text: 'This is a test post',
-				authorId: 1,
+				text,
+				authorId: req.session.userId,
 			},
 		});
 	}

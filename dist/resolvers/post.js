@@ -26,12 +26,14 @@ let PostResolver = class PostResolver {
             },
         });
     }
-    async createPost(title, { prisma }) {
+    async createPost(title, text, { prisma, req }) {
+        if (!req.session.userId)
+            throw new Error('Not authenticated');
         return await prisma.post.create({
             data: {
                 title,
-                text: 'This is a test post',
-                authorId: 1,
+                text,
+                authorId: req.session.userId,
             },
         });
     }
@@ -91,9 +93,10 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Mutation)(() => Post_1.Post),
     __param(0, (0, type_graphql_1.Arg)('title')),
-    __param(1, (0, type_graphql_1.Ctx)()),
+    __param(1, (0, type_graphql_1.Arg)('text')),
+    __param(2, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "createPost", null);
 __decorate([

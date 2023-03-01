@@ -9,3 +9,4 @@ src/generated/typegraphql-prisma/helpers.ts
 src/generated/typegraphql-prisma/index.ts
 src/generated/typegraphql-prisma/scalars.ts
 dist/
+.DS_Store
