@@ -27,7 +27,6 @@ export class PostResolver {
 		@Ctx() { prisma, req }: MyContext
 	): Promise<PostType> {
 		if (!req.session.userId) throw new Error('Not authenticated');
-
 		return await prisma.post.create({
 			data: {
 				title,
