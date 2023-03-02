@@ -8,8 +8,23 @@ import { isAuth } from '../middleware/isAuth';
 @Resolver()
 export class PostResolver {
 	@Query(() => [PostType])
-	async posts(@Ctx() { prisma }: MyContext): Promise<PostType[]> {
-		return await prisma.post.findMany();
+	async posts(
+		@Arg('limit', () => Int) limit: number,
+		@Arg('cursor', () => String, { nullable: true }) cursor: string | null,
+		@Ctx() { prisma }: MyContext
+	): Promise<PostType[]> {
+		const realLimit = Math.min(50, limit);
+		return await prisma.post.findMany({
+			where: {
+				createdAt: {
+					lt: cursor ? new Date(cursor) : new Date(),
+				},
+			},
+			orderBy: {
+				createdAt: 'desc',
+			},
+			take: realLimit,
+		});
 	}
 
 	@Query(() => PostType, { nullable: true })
