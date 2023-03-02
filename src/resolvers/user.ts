@@ -6,9 +6,9 @@ import { User } from '@prisma/client';
 import { validateRegister } from '../util/validateRegister';
 import { sendEmail } from '../util/sendEmail';
 import { v4 as uuidv4 } from 'uuid';
+import { UserType } from '../schemas/UserType';
 import { UserResponse } from '../schemas/UserResponse';
 import { UsernamePasswordInput } from '../schemas/UsernamePasswordInput';
-import { User as UserType } from '../generated/typegraphql-prisma/models';
 
 @Resolver()
 export class UserResolver {
