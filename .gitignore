@@ -2,11 +2,6 @@ node_modules
 # Keep environment variables out of version control
 .env
 *.rdb
-src/generated/typegraphql-prisma/resolvers
-src/generated/typegraphql-prisma/enums
-src/generated/typegraphql-prisma/enhance.ts
-src/generated/typegraphql-prisma/helpers.ts
-src/generated/typegraphql-prisma/index.ts
-src/generated/typegraphql-prisma/scalars.ts
+./src/generated
 dist/
 .DS_Store
