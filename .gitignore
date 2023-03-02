@@ -2,7 +2,5 @@ node_modules
 # Keep environment variables out of version control
 .env
 *.rdb
-./src/generated
-dist/
-dist/*
+dist
 .DS_Store
