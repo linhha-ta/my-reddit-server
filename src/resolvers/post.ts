@@ -1,6 +1,6 @@
 import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
 import { MyContext } from '../types';
-import { Post as PostType } from '../generated/typegraphql-prisma/models/Post';
+import { PostType } from '../schemas/PostType';
 
 // a resolver is a class that contains methods that will be used
 // to resolve the queries and mutations that we will define in the schema
