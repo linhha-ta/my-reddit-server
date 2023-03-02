@@ -1,6 +1,7 @@
-import { Arg, Ctx, Int, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, Int, Mutation, Query, Resolver, UseMiddleware } from 'type-graphql';
 import { MyContext } from '../types';
 import { PostType } from '../schemas/PostType';
+import { isAuth } from '../middleware/isAuth';
 
 // a resolver is a class that contains methods that will be used
 // to resolve the queries and mutations that we will define in the schema
@@ -21,17 +22,17 @@ export class PostResolver {
 	}
 
 	@Mutation(() => PostType)
+	@UseMiddleware(isAuth)
 	async createPost(
 		@Arg('title') title: string,
 		@Arg('text') text: string,
 		@Ctx() { prisma, req }: MyContext
 	): Promise<PostType> {
-		if (!req.session.userId) throw new Error('Not authenticated');
 		return await prisma.post.create({
 			data: {
 				title,
 				text,
-				authorId: req.session.userId,
+				authorId: req.session.userId as number,
 			},
 		});
 	}
