@@ -13,6 +13,15 @@ export class PostType {
 	title: string;
 
 	@Field()
+	text: string;
+
+	@Field()
+	points: number;
+
+	@Field()
+	authorId: number;
+
+	@Field()
 	createdAt: Date;
 
 	@Field()

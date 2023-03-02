@@ -21,10 +21,17 @@ export class PostResolver {
 	}
 
 	@Mutation(() => PostType)
-	async createPost(@Arg('title') title: string, @Ctx() { prisma }: MyContext): Promise<PostType> {
+	async createPost(
+		@Arg('title') title: string,
+		@Arg('text') text: string,
+		@Arg('authorId') authorId: number,
+		@Ctx() { prisma }: MyContext
+	): Promise<PostType> {
 		return await prisma.post.create({
 			data: {
 				title,
+				text,
+				authorId,
 			},
 		});
 	}
