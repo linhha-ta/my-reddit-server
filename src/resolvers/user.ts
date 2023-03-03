@@ -1,5 +1,5 @@
 import { MyContext } from 'src/types';
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
+import { Arg, Ctx, FieldResolver, Mutation, Query, Resolver, Root } from 'type-graphql';
 import argon2 from 'argon2';
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from '../constants';
 import { User } from '@prisma/client';
@@ -10,8 +10,18 @@ import { UserType } from '../schemas/UserType';
 import { UserResponse } from '../schemas/UserResponse';
 import { UsernamePasswordInput } from '../schemas/UsernamePasswordInput';
 
-@Resolver()
+@Resolver(UserType)
 export class UserResolver {
+	@FieldResolver(() => String)
+	email(@Root() user: UserType, @Ctx() { req }: MyContext) {
+		// this is the current user and its ok to show them their own email
+		if (req.session.userId === user.id) {
+			return user.email;
+		}
+		// current user wants to see someone elses email
+		return '';
+	}
+
 	// create a me query
 	@Query(() => UserType, { nullable: true })
 	async me(@Ctx() { prisma, req }: MyContext) {

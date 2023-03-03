@@ -32,6 +32,15 @@ export class PostResolver {
 				createdAt: 'desc',
 			},
 			take: realLimitPlusOne,
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
 		});
 
 		return {
@@ -45,6 +54,15 @@ export class PostResolver {
 		return await prisma.post.findUnique({
 			where: {
 				id: id,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
 			},
 		});
 	}
@@ -62,6 +80,15 @@ export class PostResolver {
 				text,
 				authorId: req.session.userId as number,
 			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
+			},
 		});
 	}
 
@@ -74,6 +101,15 @@ export class PostResolver {
 		const post = await prisma.post.findUnique({
 			where: {
 				id,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
 			},
 		});
 
@@ -91,6 +127,15 @@ export class PostResolver {
 			},
 			data: {
 				title,
+			},
+			include: {
+				author: {
+					select: {
+						id: true,
+						username: true,
+						email: true,
+					},
+				},
 			},
 		});
 	}

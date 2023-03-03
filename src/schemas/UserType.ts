@@ -5,11 +5,11 @@ export class UserType {
 	@Field()
 	id: number;
 
-	@Field()
-	createdAt: Date;
+	// @Field()
+	// createdAt: Date;
 
-	@Field()
-	updatedAt: Date;
+	// @Field()
+	// updatedAt: Date;
 
 	@Field()
 	username: string;
