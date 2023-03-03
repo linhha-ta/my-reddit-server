@@ -2,6 +2,7 @@ import { Arg, Ctx, FieldResolver, Int, Mutation, Query, Resolver, Root, UseMiddl
 import { MyContext } from '../types';
 import { PostType } from '../schemas/PostType';
 import { isAuth } from '../middleware/isAuth';
+import { PaginatedPosts } from '../schemas/PaginatedPosts';
 
 // a resolver is a class that contains methods that will be used
 // to resolve the queries and mutations that we will define in the schema
@@ -12,14 +13,16 @@ export class PostResolver {
 		return root.text.slice(0, 50);
 	}
 
-	@Query(() => [PostType])
+	@Query(() => PaginatedPosts)
 	async posts(
 		@Arg('limit', () => Int) limit: number,
 		@Arg('cursor', () => String, { nullable: true }) cursor: string | null,
 		@Ctx() { prisma }: MyContext
-	): Promise<PostType[]> {
+	): Promise<PaginatedPosts> {
 		const realLimit = Math.min(50, limit);
-		return await prisma.post.findMany({
+		const realLimitPlusOne = realLimit + 1;
+
+		const posts = await prisma.post.findMany({
 			where: {
 				createdAt: {
 					lt: cursor ? new Date(cursor) : new Date(),
@@ -28,8 +31,13 @@ export class PostResolver {
 			orderBy: {
 				createdAt: 'desc',
 			},
-			take: realLimit,
+			take: realLimitPlusOne,
 		});
+
+		return {
+			posts: posts.slice(0, realLimit),
+			hasMore: posts.length === realLimitPlusOne,
+		};
 	}
 
 	@Query(() => PostType, { nullable: true })
