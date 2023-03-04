@@ -33,11 +33,13 @@ export class PostResolver {
 			},
 			take: realLimitPlusOne,
 			include: {
+				updoots: true,
 				author: {
 					select: {
 						id: true,
 						username: true,
 						email: true,
+						updoots: true,
 					},
 				},
 			},
@@ -51,20 +53,24 @@ export class PostResolver {
 
 	@Query(() => PostType, { nullable: true })
 	async post(@Arg('id', () => Int) id: number, @Ctx() { prisma }: MyContext): Promise<PostType | null> {
-		return await prisma.post.findUnique({
+		const post = await prisma.post.findUnique({
 			where: {
 				id: id,
 			},
 			include: {
+				updoots: true,
 				author: {
 					select: {
 						id: true,
 						username: true,
 						email: true,
+						updoots: true,
 					},
 				},
 			},
 		});
+
+		return post;
 	}
 
 	@Mutation(() => PostType)
@@ -78,14 +84,16 @@ export class PostResolver {
 			data: {
 				title,
 				text,
-				authorId: req.session.userId as number,
+				authorId: req.session.userId!,
 			},
 			include: {
+				updoots: true,
 				author: {
 					select: {
 						id: true,
 						username: true,
 						email: true,
+						updoots: true,
 					},
 				},
 			},
@@ -103,11 +111,13 @@ export class PostResolver {
 				id,
 			},
 			include: {
+				updoots: true,
 				author: {
 					select: {
 						id: true,
 						username: true,
 						email: true,
+						updoots: true,
 					},
 				},
 			},
@@ -129,11 +139,13 @@ export class PostResolver {
 				title,
 			},
 			include: {
+				updoots: true,
 				author: {
 					select: {
 						id: true,
 						username: true,
 						email: true,
+						updoots: true,
 					},
 				},
 			},
@@ -157,6 +169,85 @@ export class PostResolver {
 				id,
 			},
 		});
+
+		return true;
+	}
+
+	@Mutation(() => Boolean)
+	@UseMiddleware(isAuth)
+	async vote(
+		@Arg('postId', () => Int) postId: number,
+		@Arg('value', () => Int) value: number,
+		@Ctx() { prisma, req }: MyContext
+	): Promise<boolean> {
+		// wenn value 0 ist soll es früh returnen
+		if (value === 0) {
+			return false;
+		}
+
+		// wenn es value negativ ist soll es -1 sein
+		// wenn value positiv ist soll es 1 sein
+		const isUpdoot = value > 0;
+		const realValue = isUpdoot ? 1 : -1;
+		const { userId } = req.session;
+
+		// check if the user has already voted on the post
+		const updoot = await prisma.updoot.findUnique({
+			where: {
+				postId_userId: {
+					postId,
+					userId: userId!,
+				},
+			},
+		});
+
+		// the user has voted on the post before
+		if (updoot && updoot.value !== realValue) {
+			// we use a transaction to make sure both queries are executed or none of them
+			await prisma.$transaction([
+				prisma.updoot.delete({
+					where: {
+						postId_userId: {
+							postId,
+							userId: userId!,
+						},
+					},
+				}),
+				prisma.post.update({
+					where: {
+						id: postId,
+					},
+					data: {
+						points: {
+							increment: realValue,
+						},
+					},
+				}),
+			]);
+
+			// the user has not voted on the post before
+		} else if (!updoot) {
+			// we use a transaction to make sure both queries are executed or none of them
+			await prisma.$transaction([
+				prisma.updoot.create({
+					data: {
+						postId,
+						userId: userId!,
+						value: realValue,
+					},
+				}),
+				prisma.post.update({
+					where: {
+						id: postId,
+					},
+					data: {
+						points: {
+							increment: realValue,
+						},
+					},
+				}),
+			]);
+		}
 
 		return true;
 	}

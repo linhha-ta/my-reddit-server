@@ -58,6 +58,9 @@ export class UserResolver {
 					password: hashedPassword,
 					email: options.email,
 				},
+				include: {
+					updoots: true,
+				},
 			});
 		} catch (error) {
 			if (error.code === 'P2002') {
@@ -86,18 +89,24 @@ export class UserResolver {
 		@Arg('password') password: string,
 		@Ctx() { prisma, req }: MyContext
 	): Promise<UserResponse> {
-		let user: User | null;
+		let user;
 
 		if (usernameOrEmail.includes('@')) {
 			user = await prisma.user.findUnique({
 				where: {
 					email: usernameOrEmail,
 				},
+				include: {
+					updoots: true,
+				},
 			});
 		} else {
 			user = await prisma.user.findUnique({
 				where: {
 					username: usernameOrEmail,
+				},
+				include: {
+					updoots: true,
 				},
 			});
 		}
@@ -201,6 +210,9 @@ export class UserResolver {
 		const user = await prisma.user.findUnique({
 			where: {
 				id: parseInt(userId),
+			},
+			include: {
+				updoots: true,
 			},
 		});
 
