@@ -19,6 +19,7 @@ model Post {
   points    Int      @default(0)
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
+  updoots   Updoot[]
 }
 
 model User {
@@ -29,4 +30,15 @@ model User {
   email     String   @db.VarChar(255) @unique
   password  String   @db.VarChar(255)
   posts     Post[]
+  updoots   Updoot[]
+}
+
+model Updoot {
+  value     Int
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  post      Post     @relation(fields: [postId], references: [id])
+  postId    Int
+
+  @@id([postId, userId])
 }
