@@ -1,4 +1,5 @@
 import { ObjectType, Field } from 'type-graphql';
+import { UpdootType } from './UpdootType';
 import { UserType } from './UserType';
 
 // we need to create a class that will be used as a type
@@ -30,4 +31,7 @@ export class PostType {
 
 	@Field()
 	updatedAt: Date;
+
+	@Field(() => [UpdootType])
+	updoots: UpdootType[];
 }

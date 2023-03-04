@@ -1,4 +1,5 @@
 import { ObjectType, Field } from 'type-graphql';
+import { UpdootType } from './UpdootType';
 
 @ObjectType()
 export class UserType {
@@ -16,4 +17,7 @@ export class UserType {
 
 	@Field()
 	email: string;
+
+	@Field(() => [UpdootType])
+	updoots: UpdootType[];
 }
