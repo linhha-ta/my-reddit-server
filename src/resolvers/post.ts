@@ -202,15 +202,19 @@ export class PostResolver {
 		});
 
 		// the user has voted on the post before
+		// and they are changing their vote
 		if (updoot && updoot.value !== realValue) {
 			// we use a transaction to make sure both queries are executed or none of them
 			await prisma.$transaction([
-				prisma.updoot.delete({
+				prisma.updoot.update({
 					where: {
 						postId_userId: {
 							postId,
 							userId: userId!,
 						},
+					},
+					data: {
+						value: realValue,
 					},
 				}),
 				prisma.post.update({
@@ -219,7 +223,7 @@ export class PostResolver {
 					},
 					data: {
 						points: {
-							increment: realValue,
+							increment: realValue * 2,
 						},
 					},
 				}),
@@ -243,6 +247,27 @@ export class PostResolver {
 					data: {
 						points: {
 							increment: realValue,
+						},
+					},
+				}),
+			]);
+		} else if (updoot && updoot.value === realValue) {
+			await prisma.$transaction([
+				prisma.updoot.delete({
+					where: {
+						postId_userId: {
+							postId,
+							userId: userId!,
+						},
+					},
+				}),
+				prisma.post.update({
+					where: {
+						id: postId,
+					},
+					data: {
+						points: {
+							decrement: realValue,
 						},
 					},
 				}),
