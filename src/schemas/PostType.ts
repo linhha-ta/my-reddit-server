@@ -1,4 +1,4 @@
-import { ObjectType, Field } from 'type-graphql';
+import { ObjectType, Field, Int } from 'type-graphql';
 import { UpdootType } from './UpdootType';
 import { UserType } from './UserType';
 
@@ -34,4 +34,7 @@ export class PostType {
 
 	@Field(() => [UpdootType])
 	updoots: UpdootType[];
+
+	@Field(() => Int, { nullable: true })
+	voteStatus?: number | null;
 }

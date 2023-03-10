@@ -17,7 +17,7 @@ export class PostResolver {
 	async posts(
 		@Arg('limit', () => Int) limit: number,
 		@Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-		@Ctx() { prisma }: MyContext
+		@Ctx() { prisma, req }: MyContext
 	): Promise<PaginatedPosts> {
 		const realLimit = Math.min(50, limit);
 		const realLimitPlusOne = realLimit + 1;
@@ -45,8 +45,36 @@ export class PostResolver {
 			},
 		});
 
+		// each post will have a voteStatus property that will be
+		// either 1, -1, or 0 depending on whether the user has
+		// upvoted, downvoted, or not voted on the post
+		// if the user is not logged in, the voteStatus will be null
+
+		const postsWithVoteStatus = posts.map(post => {
+			if (!req.session.userId) {
+				return {
+					...post,
+					voteStatus: null,
+				};
+			}
+
+			const updoot = post.updoots.find(updoot => updoot.userId === req.session.userId);
+
+			if (updoot) {
+				return {
+					...post,
+					voteStatus: updoot.value,
+				};
+			}
+
+			return {
+				...post,
+				voteStatus: null,
+			};
+		});
+
 		return {
-			posts: posts.slice(0, realLimit),
+			posts: postsWithVoteStatus.slice(0, realLimit),
 			hasMore: posts.length === realLimitPlusOne,
 		};
 	}
