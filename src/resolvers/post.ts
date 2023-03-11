@@ -181,7 +181,10 @@ export class PostResolver {
 	}
 
 	@Mutation(() => Boolean)
-	async deletePost(@Arg('id') id: number, @Ctx() { prisma }: MyContext): Promise<boolean> {
+	@UseMiddleware(isAuth)
+	async deletePost(@Arg('id', () => Int) id: number, @Ctx() { prisma, req }: MyContext): Promise<boolean> {
+		const { userId } = req.session;
+
 		const post = await prisma.post.findUnique({
 			where: {
 				id,
@@ -189,6 +192,10 @@ export class PostResolver {
 		});
 
 		if (!post) {
+			return false;
+		}
+
+		if (post.authorId !== userId) {
 			return false;
 		}
 
