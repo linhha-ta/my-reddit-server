@@ -129,9 +129,11 @@ export class PostResolver {
 	}
 
 	@Mutation(() => PostType, { nullable: true })
+	@UseMiddleware(isAuth)
 	async updatePost(
-		@Arg('id') id: number,
+		@Arg('id', () => Int) id: number,
 		@Arg('title') title: string,
+		@Arg('text') text: string,
 		@Ctx() { prisma }: MyContext
 	): Promise<PostType | null> {
 		const post = await prisma.post.findUnique({
@@ -165,6 +167,7 @@ export class PostResolver {
 			},
 			data: {
 				title,
+				text,
 			},
 			include: {
 				updoots: true,
